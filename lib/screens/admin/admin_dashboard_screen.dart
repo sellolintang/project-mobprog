@@ -1,96 +1,111 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../../app/colors.dart';
+import '../../core/routes/app_routes.dart';
+import '../../providers/auth_provider.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
 
+  Future<void> _logout(BuildContext context) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    await authProvider.logout();
+
+    if (!context.mounted) return;
+
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      AppRoutes.publicHome,
+          (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final user = context.watch<AuthProvider>().user;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Dashboard Admin'),
+        actions: [
+          IconButton(
+            onPressed: () => _logout(context),
+            icon: const Icon(Icons.logout),
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          const Text(
-            'Ringkasan Seleksi',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+          Card(
+            child: ListTile(
+              leading: const CircleAvatar(
+                child: Icon(Icons.admin_panel_settings),
+              ),
+              title: Text(user?.name ?? 'Admin'),
+              subtitle: Text(user?.email ?? '-'),
             ),
           ),
-          const SizedBox(height: 6),
-          const Text(
-            'Pantau data utama proses pemilihan duta.',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 14,
-            mainAxisSpacing: 14,
-            childAspectRatio: 1.15,
-            children: const [
-              _StatCard(
-                title: 'Total Peserta',
-                value: '128',
-                icon: Icons.groups_rounded,
-                color: AppColors.primary,
-              ),
-              _StatCard(
-                title: 'Total Juri',
-                value: '6',
-                icon: Icons.rate_review_rounded,
-                color: AppColors.success,
-              ),
-              _StatCard(
-                title: 'Lulus Admin',
-                value: '84',
-                icon: Icons.verified_rounded,
-                color: AppColors.warning,
-              ),
-              _StatCard(
-                title: 'Finalis',
-                value: '18',
-                icon: Icons.emoji_events_rounded,
-                color: AppColors.secondary,
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
           const Text(
-            'Aktivitas Terbaru',
+            'Menu Admin',
             style: TextStyle(
               fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
             ),
           ),
+
           const SizedBox(height: 12),
 
-          const _ActivityTile(
-            title: 'Peserta baru mendaftar',
-            subtitle: 'Ayu Lestari mengirim formulir pendaftaran.',
-            time: '10 menit lalu',
+          _AdminMenuCard(
+            icon: Icons.event_note,
+            title: 'Periode Pemilihan',
+            subtitle: 'Kelola tahun dan status pemilihan',
+            onTap: () {
+              Navigator.pushNamed(context, AppRoutes.periodList);
+            },
           ),
-          const _ActivityTile(
-            title: 'Validasi administrasi',
-            subtitle: '12 peserta telah diperiksa oleh admin.',
-            time: '1 jam lalu',
+          _AdminMenuCard(
+            icon: Icons.people_alt,
+            title: 'Data Calon',
+            subtitle: 'Lihat, validasi, atau tolak calon',
+            onTap: () {
+              Navigator.pushNamed(context, AppRoutes.candidateList);
+            },
           ),
-          const _ActivityTile(
-            title: 'Jadwal wawancara dibuat',
-            subtitle: 'Sesi wawancara batch 1 sudah disusun.',
-            time: '2 jam lalu',
+          _AdminMenuCard(
+            icon: Icons.rule,
+            title: 'Kriteria Penilaian',
+            subtitle: 'Kelola kriteria dan bobot ARAS',
+            onTap: () {
+              Navigator.pushNamed(context, AppRoutes.criterionList);
+            },
+          ),
+          _AdminMenuCard(
+            icon: Icons.groups,
+            title: 'Data Juri',
+            subtitle: 'Kelola akun juri dan pembagian kriteria',
+            onTap: () {
+              Navigator.pushNamed(context, AppRoutes.juryList);
+            },
+          ),
+          _AdminMenuCard(
+            icon: Icons.event_available,
+            title: 'Jadwal Wawancara',
+            subtitle: 'Kelola jadwal wawancara calon',
+            onTap: () {
+              Navigator.pushNamed(context, AppRoutes.interviewList);
+            },
+          ),
+          _AdminMenuCard(
+            icon: Icons.emoji_events,
+            title: 'Hasil ARAS',
+            subtitle: 'Lihat ranking akhir calon Duta Kampus',
+            onTap: () {
+              Navigator.pushNamed(context, AppRoutes.arasResultList);
+            },
           ),
         ],
       ),
@@ -98,135 +113,28 @@ class AdminDashboardScreen extends StatelessWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  final String title;
-  final String value;
+class _AdminMenuCard extends StatelessWidget {
   final IconData icon;
-  final Color color;
-
-  const _StatCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w900,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActivityTile extends StatelessWidget {
   final String title;
   final String subtitle;
-  final String time;
+  final VoidCallback onTap;
 
-  const _ActivityTile({
+  const _AdminMenuCard({
+    required this.icon,
     required this.title,
     required this.subtitle,
-    required this.time,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(
-              Icons.history_rounded,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  time,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+    return Card(
+      child: ListTile(
+        leading: Icon(icon, color: const Color(0xFF1E3A8A)),
+        title: Text(title),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
       ),
     );
   }

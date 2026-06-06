@@ -1,0 +1,203 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../core/routes/app_routes.dart';
+import '../../providers/auth_provider.dart';
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  bool _obscurePassword = true;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    final success = await authProvider.login(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Login gagal'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (authProvider.role == 'admin') {
+      Navigator.pushReplacementNamed(context, AppRoutes.adminDashboard);
+    } else if (authProvider.role == 'juri') {
+      Navigator.pushReplacementNamed(context, AppRoutes.juryDashboard);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Role pengguna tidak dikenali.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Consumer<AuthProvider>(
+        builder: (context, authProvider, child) {
+          return SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Card(
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Icon(
+                              Icons.school_rounded,
+                              size: 64,
+                              color: Color(0xFF1E3A8A),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Duta Kampus Mobile',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Login sebagai Admin atau Juri',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.black54,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+
+                            TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: const InputDecoration(
+                                labelText: 'Email',
+                                prefixIcon: Icon(Icons.email_outlined),
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Email wajib diisi';
+                                }
+
+                                if (!value.contains('@')) {
+                                  return 'Format email tidak valid';
+                                }
+
+                                return null;
+                              },
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                border: const OutlineInputBorder(),
+                                suffixIcon: IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                  ),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Password wajib diisi';
+                                }
+
+                                return null;
+                              },
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            ElevatedButton(
+                              onPressed:
+                              authProvider.isLoading ? null : _login,
+                              style: ElevatedButton.styleFrom(
+                                padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: authProvider.isLoading
+                                  ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                                  : const Text(
+                                'Login',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}

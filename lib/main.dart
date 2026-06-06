@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'app/app.dart';
+import 'app.dart';
+import 'core/notifications/notification_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const DutaSelectApp());
+
+  await NotificationService.init();
+
+  runApp(const MyApp());
 }
