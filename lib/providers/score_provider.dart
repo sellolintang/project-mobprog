@@ -14,6 +14,9 @@ class ScoreProvider extends ChangeNotifier {
   List<ScoreCandidateModel> histories = [];
   List<ScoreCriterionModel> criteria = [];
 
+  ScoringFormDataModel? scoringForm;
+  ScoringHistoryDetailModel? historyDetail;
+
   bool isLoading = false;
   String? errorMessage;
 
@@ -36,6 +39,30 @@ class ScoreProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> fetchHistoryDetail({
+    required int periodId,
+    required int candidateId,
+  }) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      historyDetail = null;
+      notifyListeners();
+
+      historyDetail = await scoreService.getScoringHistoryDetail(
+        periodId: periodId,
+        candidateId: candidateId,
+      );
+
+      isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      isLoading = false;
+      errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+    }
+  }
+
   Future<void> fetchScoringForm({
     required int periodId,
     required int candidateId,
@@ -43,12 +70,16 @@ class ScoreProvider extends ChangeNotifier {
     try {
       isLoading = true;
       errorMessage = null;
+      scoringForm = null;
+      criteria = [];
       notifyListeners();
 
-      criteria = await scoreService.getScoringForm(
+      scoringForm = await scoreService.getScoringForm(
         periodId: periodId,
         candidateId: candidateId,
       );
+
+      criteria = scoringForm?.criteria ?? [];
 
       isLoading = false;
       notifyListeners();
@@ -66,6 +97,9 @@ class ScoreProvider extends ChangeNotifier {
     required List<Map<String, dynamic>> scores,
   }) async {
     try {
+      errorMessage = null;
+      notifyListeners();
+
       await scoreService.saveScores(
         periodId: periodId,
         candidateId: candidateId,
@@ -78,6 +112,7 @@ class ScoreProvider extends ChangeNotifier {
       );
 
       await fetchCandidates(periodId: periodId);
+
       return true;
     } catch (e) {
       errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -107,6 +142,8 @@ class ScoreProvider extends ChangeNotifier {
 
   void clearForm() {
     criteria = [];
+    scoringForm = null;
+    historyDetail = null;
     errorMessage = null;
     notifyListeners();
   }

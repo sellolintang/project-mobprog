@@ -12,8 +12,14 @@ class ScoreService {
   String _errorMessage(DioException e, String fallback) {
     final data = e.response?.data;
 
-    if (data is Map && data['message'] != null) {
-      return data['message'].toString();
+    if (data is Map) {
+      if (data['message'] != null) {
+        return data['message'].toString();
+      }
+
+      if (data['errors'] != null) {
+        return data['errors'].toString();
+      }
     }
 
     return fallback;
@@ -21,14 +27,25 @@ class ScoreService {
 
   Map<String, dynamic> _extractDataMap(dynamic responseData) {
     if (responseData is Map && responseData['data'] is Map) {
-      return Map<String, dynamic>.from(responseData['data']);
+      return Map<String, dynamic>.from(responseData['data'] as Map);
     }
 
     if (responseData is Map) {
       return Map<String, dynamic>.from(responseData);
     }
 
-    return {};
+    return <String, dynamic>{};
+  }
+
+  List<Map<String, dynamic>> _extractMapList(dynamic value) {
+    if (value is! List) {
+      return <Map<String, dynamic>>[];
+    }
+
+    return value
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
   }
 
   Future<List<ScoreCandidateModel>> getScoringCandidates({
@@ -43,14 +60,10 @@ class ScoreService {
       );
 
       final data = _extractDataMap(response.data);
-      final candidates = data['candidates'] is List ? data['candidates'] : [];
+      final candidateList = _extractMapList(data['candidates']);
 
-      return candidates
-          .map(
-            (item) => ScoreCandidateModel.fromJson(
-          Map<String, dynamic>.from(item),
-        ),
-      )
+      return candidateList
+          .map((item) => ScoreCandidateModel.fromJson(item))
           .toList();
     } on DioException catch (e) {
       throw Exception(
@@ -59,7 +72,7 @@ class ScoreService {
     }
   }
 
-  Future<List<ScoreCriterionModel>> getScoringForm({
+  Future<ScoringFormDataModel> getScoringForm({
     required int periodId,
     required int candidateId,
   }) async {
@@ -72,15 +85,8 @@ class ScoreService {
       );
 
       final data = _extractDataMap(response.data);
-      final criteria = data['criteria'] is List ? data['criteria'] : [];
 
-      return criteria
-          .map(
-            (item) => ScoreCriterionModel.fromJson(
-          Map<String, dynamic>.from(item),
-        ),
-      )
-          .toList();
+      return ScoringFormDataModel.fromJson(data);
     } on DioException catch (e) {
       throw Exception(
         _errorMessage(e, 'Gagal mengambil form penilaian.'),
@@ -120,18 +126,36 @@ class ScoreService {
       );
 
       final data = _extractDataMap(response.data);
-      final histories = data['histories'] is List ? data['histories'] : [];
+      final historyList = _extractMapList(data['histories']);
 
-      return histories
-          .map(
-            (item) => ScoreCandidateModel.fromJson(
-          Map<String, dynamic>.from(item),
-        ),
-      )
+      return historyList
+          .map((item) => ScoreCandidateModel.fromJson(item))
           .toList();
     } on DioException catch (e) {
       throw Exception(
         _errorMessage(e, 'Gagal mengambil riwayat penilaian.'),
+      );
+    }
+  }
+
+  Future<ScoringHistoryDetailModel> getScoringHistoryDetail({
+    required int periodId,
+    required int candidateId,
+  }) async {
+    try {
+      final response = await apiClient.dio.get(
+        '${ApiConstants.juryScoringHistory}/$candidateId',
+        queryParameters: {
+          'period_id': periodId,
+        },
+      );
+
+      final data = _extractDataMap(response.data);
+
+      return ScoringHistoryDetailModel.fromJson(data);
+    } on DioException catch (e) {
+      throw Exception(
+        _errorMessage(e, 'Gagal mengambil detail riwayat penilaian.'),
       );
     }
   }

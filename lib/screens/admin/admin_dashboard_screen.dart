@@ -10,7 +10,6 @@ import '../../models/jury_model.dart';
 import '../../models/period_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/admin_notification_service.dart';
-import '../../services/candidate_service.dart';
 import '../../services/criterion_service.dart';
 import '../../services/jury_service.dart';
 import '../../services/period_service.dart';
@@ -26,7 +25,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final AdminNotificationService _adminNotificationService =
   AdminNotificationService();
 
-  final CandidateService _candidateService = CandidateService();
   final JuryService _juryService = JuryService();
   final CriterionService _criterionService = CriterionService();
   final PeriodService _periodService = PeriodService();
@@ -646,20 +644,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
             const SizedBox(height: 16),
 
-            // const Text(
-            //   'Ringkasan Periode',
-            //   style: TextStyle(
-            //     fontSize: 18,
-            //     fontWeight: FontWeight.bold,
-            //   ),
-            // ),
-            //
-            // const SizedBox(height: 12),
-            //
-            // _periodSummaryCard(),
-            //
-            // const SizedBox(height: 16),
-
             const Text(
               'Statistik Admin',
               style: TextStyle(
@@ -714,12 +698,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               subtitle: 'Kelola jadwal wawancara calon',
               onTap: () => _openRouteAndRefresh(AppRoutes.interviewList),
             ),
-            // _AdminMenuCard(
-            //   icon: Icons.analytics_outlined,
-            //   title: 'Monitoring Nilai',
-            //   subtitle: 'Pantau kelengkapan nilai calon, kriteria, dan juri',
-            //   onTap: () => _openRouteAndRefresh(AppRoutes.scoreMonitoring),
-            // ),
             _AdminMenuCard(
               icon: Icons.emoji_events,
               title: 'Hasil ARAS',
