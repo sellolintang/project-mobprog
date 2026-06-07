@@ -30,4 +30,8 @@ class ApiConstants {
   static const String juryScoringCandidates = '/jury/scoring-candidates';
   static const String juryScoringHistory = '/jury/scoring-history';
   static const String publicResults = '/public/results';
+  static const String announcementCheckReadiness = '/announcements/check-readiness';
+  static const String announcementPublish = '/announcements/publish';
+  static const String announcementUnpublish = '/announcements/unpublish';
+  static const String monitoringScores = '/monitoring/scores';
 }

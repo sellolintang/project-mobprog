@@ -27,6 +27,7 @@ class JuryDashboardScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Dashboard Juri'),
         actions: [
           IconButton(

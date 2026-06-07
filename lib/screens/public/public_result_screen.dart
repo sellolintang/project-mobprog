@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../models/aras_result_model.dart';
 import '../../providers/aras_result_provider.dart';
-import '../../providers/period_provider.dart';
 
 class PublicResultScreen extends StatefulWidget {
   const PublicResultScreen({super.key});
@@ -13,51 +12,30 @@ class PublicResultScreen extends StatefulWidget {
 }
 
 class _PublicResultScreenState extends State<PublicResultScreen> {
-  int? _selectedPeriodId;
-
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-
-      final periodProvider = context.read<PeriodProvider>();
-      final resultProvider = context.read<ArasResultProvider>();
-
-      await periodProvider.fetchPeriods();
-
-      if (!mounted) return;
-
-      if (periodProvider.periods.isNotEmpty) {
-        _selectedPeriodId = periodProvider.periods.first.id;
-
-        await resultProvider.fetchPublicResults(
-          periodId: _selectedPeriodId,
-        );
-      } else {
-        await resultProvider.fetchPublicResults();
-      }
-
-      if (mounted) {
-        setState(() {});
-      }
+      context.read<ArasResultProvider>().fetchPublicResults();
     });
   }
 
+  Future<void> _refreshResults() {
+    return context.read<ArasResultProvider>().fetchPublicResults();
+  }
+
+  Color _rankColor(int rank) {
+    if (rank == 1) return Colors.amber;
+    if (rank == 2) return Colors.blueGrey;
+    if (rank == 3) return Colors.brown;
+    return Colors.grey;
+  }
+
   Widget _rankBadge(int rank) {
-    Color color = Colors.grey;
-
-    if (rank == 1) {
-      color = Colors.amber;
-    } else if (rank == 2) {
-      color = Colors.blueGrey;
-    } else if (rank == 3) {
-      color = Colors.brown;
-    }
-
     return CircleAvatar(
-      backgroundColor: color,
+      backgroundColor: _rankColor(rank),
       child: Text(
         rank.toString(),
         style: const TextStyle(
@@ -82,7 +60,8 @@ class _PublicResultScreenState extends State<PublicResultScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(result.registrationNumber ?? '-'),
-              Text(result.studyProgram ?? '-'),
+              if ((result.studyProgram ?? '').isNotEmpty)
+                Text(result.studyProgram ?? '-'),
               const SizedBox(height: 6),
               Text(
                 'Utility Score: ${result.utilityScore.toStringAsFixed(6)}',
@@ -94,150 +73,136 @@ class _PublicResultScreenState extends State<PublicResultScreen> {
     );
   }
 
+  Widget _headerCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E3A8A),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.emoji_events,
+            color: Colors.white,
+            size: 42,
+          ),
+          SizedBox(height: 12),
+          Text(
+            'Hasil Ranking Duta Kampus',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 21,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Ranking dihitung berdasarkan metode ARAS dari nilai juri dan bobot kriteria.',
+            style: TextStyle(color: Colors.white70),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _resultBody(ArasResultProvider resultProvider) {
+    if (resultProvider.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (resultProvider.errorMessage != null) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(24),
+        children: [
+          const SizedBox(height: 80),
+          const Icon(
+            Icons.info_outline,
+            size: 64,
+            color: Colors.orange,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            resultProvider.errorMessage!,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.black87),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _refreshResults,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Coba Lagi'),
+          ),
+        ],
+      );
+    }
+
+    if (resultProvider.results.isEmpty) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(24),
+        children: const [
+          SizedBox(height: 90),
+          Icon(
+            Icons.emoji_events_outlined,
+            size: 72,
+            color: Colors.grey,
+          ),
+          SizedBox(height: 16),
+          Text(
+            'Hasil pemilihan belum tersedia.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Hasil akan tampil setelah admin mempublikasikan pengumuman.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.black54),
+          ),
+        ],
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _refreshResults,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: resultProvider.results.length,
+        itemBuilder: (context, index) {
+          return _resultCard(resultProvider.results[index]);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final periodProvider = context.watch<PeriodProvider>();
     final resultProvider = context.watch<ArasResultProvider>();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Hasil Pemilihan'),
+        actions: [
+          IconButton(
+            tooltip: 'Refresh',
+            onPressed: _refreshResults,
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
       ),
       body: Column(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(18),
-            margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E3A8A),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.emoji_events,
-                  color: Colors.white,
-                  size: 42,
-                ),
-                SizedBox(height: 12),
-                Text(
-                  'Hasil Ranking Duta Kampus',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 21,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 6),
-                Text(
-                  'Ranking dihitung berdasarkan metode ARAS dari nilai juri dan bobot kriteria.',
-                  style: TextStyle(color: Colors.white70),
-                ),
-              ],
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: DropdownButtonFormField<int>(
-              initialValue: _selectedPeriodId,
-              decoration: const InputDecoration(
-                labelText: 'Periode Pemilihan',
-                prefixIcon: Icon(Icons.event_note),
-                border: OutlineInputBorder(),
-              ),
-              items: periodProvider.periods.map((period) {
-                return DropdownMenuItem<int>(
-                  value: period.id,
-                  child: Text('Duta Kampus ${period.electionYear}'),
-                );
-              }).toList(),
-              onChanged: (value) async {
-                setState(() {
-                  _selectedPeriodId = value;
-                });
-
-                await context.read<ArasResultProvider>().fetchPublicResults(
-                  periodId: value,
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
+          _headerCard(),
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: () {
-                return context.read<ArasResultProvider>().fetchPublicResults(
-                  periodId: _selectedPeriodId,
-                );
-              },
-              child: Builder(
-                builder: (context) {
-                  if (resultProvider.isLoading) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-
-                  if (resultProvider.errorMessage != null) {
-                    return ListView(
-                      padding: const EdgeInsets.all(24),
-                      children: [
-                        const Icon(
-                          Icons.info_outline,
-                          size: 64,
-                          color: Colors.orange,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          resultProvider.errorMessage!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.black87),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Catatan: apabila endpoint hasil masih dilindungi token, halaman publik ini perlu dibuka dari sisi backend.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.black54),
-                        ),
-                      ],
-                    );
-                  }
-
-                  if (resultProvider.results.isEmpty) {
-                    return ListView(
-                      padding: const EdgeInsets.all(24),
-                      children: const [
-                        SizedBox(height: 90),
-                        Icon(
-                          Icons.emoji_events_outlined,
-                          size: 72,
-                          color: Colors.grey,
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'Hasil pemilihan belum tersedia.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ],
-                    );
-                  }
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: resultProvider.results.length,
-                    itemBuilder: (context, index) {
-                      return _resultCard(resultProvider.results[index]);
-                    },
-                  );
-                },
-              ),
-            ),
+            child: _resultBody(resultProvider),
           ),
         ],
       ),

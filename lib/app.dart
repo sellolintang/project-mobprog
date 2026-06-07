@@ -36,6 +36,8 @@ import 'screens/public/candidate_registration_screen.dart';
 import 'screens/public/registration_success_screen.dart';
 import 'screens/public/public_result_screen.dart';
 
+import 'screens/admin/monitoring/score_monitoring_screen.dart';
+
 import 'core/routes/app_routes.dart';
 import 'providers/auth_provider.dart';
 import 'screens/splash/splash_screen.dart';
@@ -109,6 +111,7 @@ class MyApp extends StatelessWidget {
           AppRoutes.candidateRegistration: (_) => const CandidateRegistrationScreen(),
           AppRoutes.registrationSuccess: (_) => const RegistrationSuccessScreen(),
           AppRoutes.publicResult: (_) => const PublicResultScreen(),
+          AppRoutes.scoreMonitoring: (_) => const ScoreMonitoringScreen(),
         },
       ),
     );

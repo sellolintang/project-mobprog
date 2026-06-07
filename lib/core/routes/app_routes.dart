@@ -30,4 +30,6 @@ class AppRoutes {
   static const String scoringCandidates = '/scoring-candidates';
   static const String scoringForm = '/scoring-form';
   static const String scoringHistory = '/scoring-history';
+
+  static const String scoreMonitoring = '/score-monitoring';
 }

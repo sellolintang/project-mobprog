@@ -20,19 +20,45 @@ class ArasResultService {
     return fallback;
   }
 
-  List _extractList(dynamic responseData) {
+  List _extractAdminResultList(dynamic responseData) {
     if (responseData is List) {
       return responseData;
     }
 
-    if (responseData is Map && responseData['data'] is List) {
-      return responseData['data'];
+    if (responseData is Map) {
+      final data = responseData['data'];
+
+      if (data is List) {
+        return data;
+      }
+
+      if (data is Map && data['data'] is List) {
+        return List.from(data['data']);
+      }
+
+      if (data is Map && data['items'] is List) {
+        return List.from(data['items']);
+      }
     }
 
-    if (responseData is Map &&
-        responseData['data'] is Map &&
-        responseData['data']['items'] is List) {
-      return responseData['data']['items'];
+    return [];
+  }
+
+  List _extractPublicResultList(dynamic responseData) {
+    if (responseData is List) {
+      return responseData;
+    }
+
+    if (responseData is Map) {
+      final data = responseData['data'];
+
+      if (data is Map && data['results'] is List) {
+        return List.from(data['results']);
+      }
+
+      if (data is List) {
+        return data;
+      }
     }
 
     return [];
@@ -43,16 +69,16 @@ class ArasResultService {
       final response = await apiClient.dio.get(
         ApiConstants.arasResults,
         queryParameters: {
-          'period_id': ?periodId,
+          if (periodId != null) 'period_id': periodId,
         },
       );
 
-      final data = _extractList(response.data);
+      final data = _extractAdminResultList(response.data);
 
       return data
           .map(
             (item) => ArasResultModel.fromJson(
-          Map<String, dynamic>.from(item),
+          Map<String, dynamic>.from(item as Map),
         ),
       )
           .toList();
@@ -87,16 +113,16 @@ class ArasResultService {
       final response = await apiClient.dio.get(
         ApiConstants.publicResults,
         queryParameters: {
-          'period_id': ?periodId,
+          if (periodId != null) 'period_id': periodId,
         },
       );
 
-      final data = _extractList(response.data);
+      final data = _extractPublicResultList(response.data);
 
       return data
           .map(
             (item) => ArasResultModel.fromJson(
-          Map<String, dynamic>.from(item),
+          Map<String, dynamic>.from(item as Map),
         ),
       )
           .toList();
