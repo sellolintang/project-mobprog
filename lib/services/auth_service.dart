@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+
 import '../core/constants/api_constants.dart';
 import '../core/network/api_client.dart';
 import '../core/storage/token_storage.dart';
@@ -14,6 +15,28 @@ class AuthService {
   })  : apiClient = apiClient ?? ApiClient(),
         tokenStorage = tokenStorage ?? TokenStorage();
 
+  String _errorMessage(DioException e, String fallback) {
+    final data = e.response?.data;
+
+    if (data is Map && data['message'] != null) {
+      return data['message'].toString();
+    }
+
+    if (data is Map && data['errors'] is Map) {
+      final errors = data['errors'] as Map;
+
+      if (errors.isNotEmpty) {
+        final firstError = errors.values.first;
+
+        if (firstError is List && firstError.isNotEmpty) {
+          return firstError.first.toString();
+        }
+      }
+    }
+
+    return fallback;
+  }
+
   Future<UserModel> login({
     required String email,
     required String password,
@@ -27,18 +50,26 @@ class AuthService {
         },
       );
 
-      final data = response.data;
+      final responseData = response.data;
+
+      if (responseData is! Map || responseData['data'] is! Map) {
+        throw Exception('Format response login tidak sesuai.');
+      }
+
+      final data = Map<String, dynamic>.from(responseData['data']);
 
       final token = data['token'];
       final userJson = data['user'];
 
-      if (token == null || userJson == null) {
-        throw Exception('Response login tidak sesuai.');
+      if (token == null || userJson == null || userJson is! Map) {
+        throw Exception('Token atau data user tidak ditemukan.');
       }
 
-      final user = UserModel.fromJson(userJson);
+      final user = UserModel.fromJson(
+        Map<String, dynamic>.from(userJson),
+      );
 
-      await tokenStorage.saveToken(token);
+      await tokenStorage.saveToken(token.toString());
       await tokenStorage.saveUserData(
         role: user.role,
         name: user.name,
@@ -47,10 +78,11 @@ class AuthService {
 
       return user;
     } on DioException catch (e) {
-      final message = e.response?.data['message'] ?? 'Login gagal.';
-      throw Exception(message);
+      throw Exception(
+        _errorMessage(e, 'Login gagal. Periksa email dan password.'),
+      );
     } catch (e) {
-      throw Exception(e.toString());
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
@@ -58,17 +90,28 @@ class AuthService {
     try {
       final response = await apiClient.dio.get(ApiConstants.me);
 
-      final data = response.data;
-      final userJson = data['user'] ?? data['data'];
+      final responseData = response.data;
 
-      if (userJson == null) {
+      if (responseData is! Map || responseData['data'] is! Map) {
+        throw Exception('Format response user tidak sesuai.');
+      }
+
+      final data = Map<String, dynamic>.from(responseData['data']);
+      final userJson = data['user'];
+
+      if (userJson == null || userJson is! Map) {
         throw Exception('Data user tidak ditemukan.');
       }
 
-      return UserModel.fromJson(userJson);
+      return UserModel.fromJson(
+        Map<String, dynamic>.from(userJson),
+      );
     } on DioException catch (e) {
-      final message = e.response?.data['message'] ?? 'Gagal mengambil data user.';
-      throw Exception(message);
+      throw Exception(
+        _errorMessage(e, 'Gagal mengambil data user.'),
+      );
+    } catch (e) {
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
     }
   }
 

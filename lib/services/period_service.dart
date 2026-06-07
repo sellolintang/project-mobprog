@@ -10,28 +10,62 @@ class PeriodService {
   PeriodService({ApiClient? apiClient})
       : apiClient = apiClient ?? ApiClient();
 
-  Future<List<PeriodModel>> getPeriods() async {
-    try {
-      final response = await apiClient.dio.get(ApiConstants.periods);
+  String _errorMessage(DioException e, String fallback) {
+    final data = e.response?.data;
 
-      final responseData = response.data;
+    if (data is Map && data['message'] != null) {
+      return data['message'].toString();
+    }
 
-      List data;
+    return fallback;
+  }
 
-      if (responseData is List) {
-        data = responseData;
-      } else if (responseData['data'] is List) {
-        data = responseData['data'];
-      } else if (responseData['data']?['items'] is List) {
-        data = responseData['data']['items'];
-      } else {
-        data = [];
+  List<dynamic> _extractList(dynamic responseData) {
+    if (responseData is List) {
+      return responseData;
+    }
+
+    if (responseData is Map) {
+      final data = responseData['data'];
+
+      if (data is List) {
+        return data;
       }
 
-      return data.map((item) => PeriodModel.fromJson(item)).toList();
+      if (data is Map && data['data'] is List) {
+        return List<dynamic>.from(data['data']);
+      }
+
+      if (data is Map && data['items'] is List) {
+        return List<dynamic>.from(data['items']);
+      }
+    }
+
+    return [];
+  }
+
+  Future<List<PeriodModel>> getPeriods() async {
+    try {
+      final response = await apiClient.dio.get(
+        ApiConstants.periods,
+        queryParameters: {
+          'per_page': 100,
+        },
+      );
+
+      final data = _extractList(response.data);
+
+      return data
+          .map(
+            (item) => PeriodModel.fromJson(
+          Map<String, dynamic>.from(item as Map),
+        ),
+      )
+          .toList();
     } on DioException catch (e) {
-      final message = e.response?.data['message'] ?? 'Gagal mengambil data periode.';
-      throw Exception(message);
+      throw Exception(
+        _errorMessage(e, 'Gagal mengambil data periode.'),
+      );
     }
   }
 
@@ -56,8 +90,9 @@ class PeriodService {
         },
       );
     } on DioException catch (e) {
-      final message = e.response?.data['message'] ?? 'Gagal menambahkan periode.';
-      throw Exception(message);
+      throw Exception(
+        _errorMessage(e, 'Gagal menambahkan periode.'),
+      );
     }
   }
 
@@ -83,8 +118,9 @@ class PeriodService {
         },
       );
     } on DioException catch (e) {
-      final message = e.response?.data['message'] ?? 'Gagal mengubah periode.';
-      throw Exception(message);
+      throw Exception(
+        _errorMessage(e, 'Gagal mengubah periode.'),
+      );
     }
   }
 
@@ -92,8 +128,9 @@ class PeriodService {
     try {
       await apiClient.dio.delete('${ApiConstants.periods}/$id');
     } on DioException catch (e) {
-      final message = e.response?.data['message'] ?? 'Gagal menghapus periode.';
-      throw Exception(message);
+      throw Exception(
+        _errorMessage(e, 'Gagal menghapus periode.'),
+      );
     }
   }
 }

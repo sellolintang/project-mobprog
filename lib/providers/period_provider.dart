@@ -34,11 +34,19 @@ class PeriodProvider extends ChangeNotifier {
   Future<bool> createPeriod({
     required int electionYear,
     required String status,
+    String? registrationStart,
+    String? registrationEnd,
+    String? interviewStart,
+    String? interviewEnd,
   }) async {
     try {
       await periodService.createPeriod(
         electionYear: electionYear,
         status: status,
+        registrationStart: registrationStart,
+        registrationEnd: registrationEnd,
+        interviewStart: interviewStart,
+        interviewEnd: interviewEnd,
       );
 
       await NotificationService.showNotification(
@@ -59,12 +67,20 @@ class PeriodProvider extends ChangeNotifier {
     required int id,
     required int electionYear,
     required String status,
+    String? registrationStart,
+    String? registrationEnd,
+    String? interviewStart,
+    String? interviewEnd,
   }) async {
     try {
       await periodService.updatePeriod(
         id: id,
         electionYear: electionYear,
         status: status,
+        registrationStart: registrationStart,
+        registrationEnd: registrationEnd,
+        interviewStart: interviewStart,
+        interviewEnd: interviewEnd,
       );
 
       await NotificationService.showNotification(

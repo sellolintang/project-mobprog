@@ -20,19 +20,25 @@ class CandidateService {
     return fallback;
   }
 
-  List _extractList(dynamic responseData) {
+  List<dynamic> _extractList(dynamic responseData) {
     if (responseData is List) {
       return responseData;
     }
 
-    if (responseData is Map && responseData['data'] is List) {
-      return responseData['data'];
-    }
+    if (responseData is Map) {
+      final data = responseData['data'];
 
-    if (responseData is Map &&
-        responseData['data'] is Map &&
-        responseData['data']['items'] is List) {
-      return responseData['data']['items'];
+      if (data is List) {
+        return data;
+      }
+
+      if (data is Map && data['data'] is List) {
+        return List<dynamic>.from(data['data']);
+      }
+
+      if (data is Map && data['items'] is List) {
+        return List<dynamic>.from(data['items']);
+      }
     }
 
     return [];
@@ -40,13 +46,21 @@ class CandidateService {
 
   Future<List<CandidateModel>> getCandidates() async {
     try {
-      final response = await apiClient.dio.get(ApiConstants.candidates);
+      final response = await apiClient.dio.get(
+        ApiConstants.candidates,
+        queryParameters: {
+          'per_page': 100,
+        },
+      );
+
       final data = _extractList(response.data);
 
       return data
-          .map((item) => CandidateModel.fromJson(
-        Map<String, dynamic>.from(item),
-      ))
+          .map(
+            (item) => CandidateModel.fromJson(
+          Map<String, dynamic>.from(item as Map),
+        ),
+      )
           .toList();
     } on DioException catch (e) {
       throw Exception(

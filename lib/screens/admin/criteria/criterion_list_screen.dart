@@ -23,6 +23,24 @@ class _CriterionListScreenState extends State<CriterionListScreen> {
     });
   }
 
+  int _criterionCodeNumber(String code) {
+    final match = RegExp(r'\d+').firstMatch(code);
+
+    if (match == null) {
+      return 999999;
+    }
+
+    return int.tryParse(match.group(0) ?? '') ?? 999999;
+  }
+
+  double _toPercent(double weight) {
+    if (weight <= 1) {
+      return weight * 100;
+    }
+
+    return weight;
+  }
+
   Future<void> _deleteCriterion(CriterionModel criterion) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -140,11 +158,22 @@ class _CriterionListScreenState extends State<CriterionListScreen> {
               );
             }
 
+            final sortedCriteria = [...provider.criteria]..sort((a, b) {
+              final numberCompare = _criterionCodeNumber(a.code)
+                  .compareTo(_criterionCodeNumber(b.code));
+
+              if (numberCompare != 0) {
+                return numberCompare;
+              }
+
+              return a.code.compareTo(b.code);
+            });
+
             return ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: provider.criteria.length,
+              itemCount: sortedCriteria.length,
               itemBuilder: (context, index) {
-                final criterion = provider.criteria[index];
+                final criterion = sortedCriteria[index];
 
                 return Card(
                   child: ListTile(
@@ -173,7 +202,7 @@ class _CriterionListScreenState extends State<CriterionListScreen> {
                           ),
                           Chip(
                             label: Text(
-                              'Bobot: ${criterion.weight}',
+                              'Bobot: ${_toPercent(criterion.weight).toStringAsFixed(0)}%',
                               style: const TextStyle(fontSize: 12),
                             ),
                           ),

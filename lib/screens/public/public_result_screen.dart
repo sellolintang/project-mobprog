@@ -32,11 +32,11 @@ class _PublicResultScreenState extends State<PublicResultScreen> {
       if (periodProvider.periods.isNotEmpty) {
         _selectedPeriodId = periodProvider.periods.first.id;
 
-        await resultProvider.fetchResults(
+        await resultProvider.fetchPublicResults(
           periodId: _selectedPeriodId,
         );
       } else {
-        await resultProvider.fetchResults();
+        await resultProvider.fetchPublicResults();
       }
 
       if (mounted) {
@@ -159,7 +159,7 @@ class _PublicResultScreenState extends State<PublicResultScreen> {
                   _selectedPeriodId = value;
                 });
 
-                await context.read<ArasResultProvider>().fetchResults(
+                await context.read<ArasResultProvider>().fetchPublicResults(
                   periodId: value,
                 );
               },
@@ -171,7 +171,7 @@ class _PublicResultScreenState extends State<PublicResultScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: () {
-                return context.read<ArasResultProvider>().fetchResults(
+                return context.read<ArasResultProvider>().fetchPublicResults(
                   periodId: _selectedPeriodId,
                 );
               },

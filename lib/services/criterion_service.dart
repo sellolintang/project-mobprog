@@ -20,19 +20,25 @@ class CriterionService {
     return fallback;
   }
 
-  List _extractList(dynamic responseData) {
+  List<dynamic> _extractList(dynamic responseData) {
     if (responseData is List) {
       return responseData;
     }
 
-    if (responseData is Map && responseData['data'] is List) {
-      return responseData['data'];
-    }
+    if (responseData is Map) {
+      final data = responseData['data'];
 
-    if (responseData is Map &&
-        responseData['data'] is Map &&
-        responseData['data']['items'] is List) {
-      return responseData['data']['items'];
+      if (data is List) {
+        return data;
+      }
+
+      if (data is Map && data['data'] is List) {
+        return List<dynamic>.from(data['data']);
+      }
+
+      if (data is Map && data['items'] is List) {
+        return List<dynamic>.from(data['items']);
+      }
     }
 
     return [];
@@ -40,18 +46,26 @@ class CriterionService {
 
   Future<List<CriterionModel>> getCriteria() async {
     try {
-      final response = await apiClient.dio.get(ApiConstants.criteria);
+      final response = await apiClient.dio.get(
+        ApiConstants.criteria,
+        queryParameters: {
+          'per_page': 100,
+        },
+      );
+
       final data = _extractList(response.data);
 
       return data
           .map(
             (item) => CriterionModel.fromJson(
-          Map<String, dynamic>.from(item),
+          Map<String, dynamic>.from(item as Map),
         ),
       )
           .toList();
     } on DioException catch (e) {
-      throw Exception(_errorMessage(e, 'Gagal mengambil data kriteria.'));
+      throw Exception(
+        _errorMessage(e, 'Gagal mengambil data kriteria.'),
+      );
     }
   }
 
@@ -80,7 +94,9 @@ class CriterionService {
         },
       );
     } on DioException catch (e) {
-      throw Exception(_errorMessage(e, 'Gagal menambahkan kriteria.'));
+      throw Exception(
+        _errorMessage(e, 'Gagal menambahkan kriteria.'),
+      );
     }
   }
 
@@ -110,7 +126,9 @@ class CriterionService {
         },
       );
     } on DioException catch (e) {
-      throw Exception(_errorMessage(e, 'Gagal mengubah kriteria.'));
+      throw Exception(
+        _errorMessage(e, 'Gagal mengubah kriteria.'),
+      );
     }
   }
 
@@ -118,7 +136,9 @@ class CriterionService {
     try {
       await apiClient.dio.delete('${ApiConstants.criteria}/$id');
     } on DioException catch (e) {
-      throw Exception(_errorMessage(e, 'Gagal menghapus kriteria.'));
+      throw Exception(
+        _errorMessage(e, 'Gagal menghapus kriteria.'),
+      );
     }
   }
 }

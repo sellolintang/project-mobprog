@@ -60,4 +60,23 @@ class ArasResultProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<void> fetchPublicResults({int? periodId}) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      results = await arasResultService.getPublicResults(
+        periodId: periodId,
+      );
+
+      isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      isLoading = false;
+      errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+    }
+  }
 }

@@ -6,6 +6,10 @@ class AppRoutes {
   static const String adminDashboard = '/admin-dashboard';
   static const String juryDashboard = '/jury-dashboard';
 
+  static const String candidateRegistration = '/candidate-registration';
+  static const String registrationSuccess = '/registration-success';
+  static const String publicResult = '/public-result';
+
   static const String periodList = '/period-list';
   static const String periodForm = '/period-form';
 
@@ -26,8 +30,4 @@ class AppRoutes {
   static const String scoringCandidates = '/scoring-candidates';
   static const String scoringForm = '/scoring-form';
   static const String scoringHistory = '/scoring-history';
-
-  static const String candidateRegistration = '/candidate-registration';
-  static const String registrationSuccess = '/registration-success';
-  static const String publicResult = '/public-result';
 }

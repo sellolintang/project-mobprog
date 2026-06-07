@@ -62,9 +62,25 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _backToHome() {
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      AppRoutes.publicHome,
+          (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Login'),
+        leading: IconButton(
+          onPressed: _backToHome,
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Kembali ke halaman utama',
+        ),
+      ),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
           return SafeArea(
@@ -187,6 +203,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: TextStyle(fontSize: 16),
                               ),
                             ),
+                            const SizedBox(height: 12),
+
+                            // TextButton.icon(
+                            //   onPressed: authProvider.isLoading ? null : _backToHome,
+                            //   icon: const Icon(Icons.home_outlined),
+                            //   label: const Text('Kembali ke Halaman Utama'),
+                            // ),
                           ],
                         ),
                       ),

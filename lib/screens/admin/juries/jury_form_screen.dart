@@ -56,7 +56,9 @@ class _JuryFormScreenState extends State<JuryFormScreen> {
 
       if (args.criteria.isNotEmpty) {
         _periodId = args.criteria.first.periodId;
-        _selectedCriteriaIds.addAll(args.criteria.map((item) => item.id));
+        _selectedCriteriaIds
+          ..clear()
+          ..addAll(args.criteria.map((item) => item.id));
       }
     }
   }

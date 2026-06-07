@@ -37,8 +37,12 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
+
       context.read<PeriodProvider>().fetchPeriods();
+      context.read<CriterionProvider>().fetchCriteria();
     });
   }
 
@@ -50,10 +54,11 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
 
     if (args is CriterionModel && _criterion == null) {
       _criterion = args;
+
       _periodId = args.periodId;
       _codeController.text = args.code;
       _nameController.text = args.name;
-      _weightController.text = args.weight.toString();
+      _weightController.text = _toPercent(args.weight).toStringAsFixed(0);
       _minScoreController.text = args.minScore.toString();
       _maxScoreController.text = args.maxScore.toString();
       _type = args.type;
@@ -71,30 +76,125 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
     super.dispose();
   }
 
+  double _toPercent(double weight) {
+    if (weight <= 1) {
+      return weight * 100;
+    }
+
+    return weight;
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  void _showMessage({
+    required String message,
+    required bool success,
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: success ? Colors.green : Colors.red,
+      ),
+    );
+  }
+
+  double _getCurrentTotalWeight({
+    required int periodId,
+  }) {
+    final criteria = context.read<CriterionProvider>().criteria;
+
+    return criteria.where((criterion) {
+      final samePeriod = criterion.periodId == periodId;
+      final differentItem =
+          _criterion == null || criterion.id != _criterion!.id;
+
+      return samePeriod && differentItem && criterion.isActive;
+    }).fold<double>(
+      0,
+          (total, criterion) => total + _toPercent(criterion.weight),
+    );
+  }
+
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     if (_periodId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Periode wajib dipilih.'),
-          backgroundColor: Colors.red,
-        ),
+      _showError('Periode wajib dipilih.');
+      return;
+    }
+
+    final code = _codeController.text.trim();
+    final name = _nameController.text.trim();
+
+    final weightPercent = double.tryParse(
+      _weightController.text.trim().replaceAll(',', '.'),
+    );
+
+    final minScore = double.tryParse(
+      _minScoreController.text.trim().replaceAll(',', '.'),
+    );
+
+    final maxScore = double.tryParse(
+      _maxScoreController.text.trim().replaceAll(',', '.'),
+    );
+
+    if (weightPercent == null) {
+      _showError('Bobot kriteria wajib berupa angka.');
+      return;
+    }
+
+    if (weightPercent <= 0) {
+      _showError('Bobot kriteria harus lebih dari 0%.');
+      return;
+    }
+
+    if (weightPercent > 100) {
+      _showError('Bobot satu kriteria tidak boleh lebih dari 100%.');
+      return;
+    }
+
+    if (minScore == null || maxScore == null) {
+      _showError('Nilai minimum dan maksimum harus berupa angka.');
+      return;
+    }
+
+    if (maxScore <= minScore) {
+      _showError('Nilai maksimum harus lebih besar dari nilai minimum.');
+      return;
+    }
+
+    final currentTotalWeight = _getCurrentTotalWeight(
+      periodId: _periodId!,
+    );
+
+    final totalAfterSave = _isActive
+        ? currentTotalWeight + weightPercent
+        : currentTotalWeight;
+
+    if (totalAfterSave > 100) {
+      _showError(
+        'Total bobot kriteria aktif tidak boleh lebih dari 100%. '
+            'Total setelah disimpan: ${totalAfterSave.toStringAsFixed(2)}%.',
       );
       return;
     }
+
+    final weightDecimal = weightPercent / 100;
 
     setState(() {
       _isSubmitting = true;
     });
 
     final provider = context.read<CriterionProvider>();
-
-    final code = _codeController.text.trim();
-    final name = _nameController.text.trim();
-    final weight = double.parse(_weightController.text.trim());
-    final minScore = double.parse(_minScoreController.text.trim());
-    final maxScore = double.parse(_maxScoreController.text.trim());
 
     bool success;
 
@@ -103,7 +203,7 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
         periodId: _periodId!,
         code: code,
         name: name,
-        weight: weight,
+        weight: weightDecimal,
         type: _type,
         minScore: minScore,
         maxScore: maxScore,
@@ -115,7 +215,7 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
         periodId: _periodId!,
         code: code,
         name: name,
-        weight: weight,
+        weight: weightDecimal,
         type: _type,
         minScore: minScore,
         maxScore: maxScore,
@@ -123,21 +223,19 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
       );
     }
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     setState(() {
       _isSubmitting = false;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? 'Data kriteria berhasil disimpan.'
-              : provider.errorMessage ?? 'Gagal menyimpan kriteria.',
-        ),
-        backgroundColor: success ? Colors.green : Colors.red,
-      ),
+    _showMessage(
+      message: success
+          ? 'Data kriteria berhasil disimpan.'
+          : provider.errorMessage ?? 'Gagal menyimpan kriteria.',
+      success: success,
     );
 
     if (success) {
@@ -174,15 +272,14 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        isEdit
-                            ? 'Ubah Data Kriteria'
-                            : 'Tambah Data Kriteria',
+                        isEdit ? 'Ubah Data Kriteria' : 'Tambah Data Kriteria',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+
                       const SizedBox(height: 24),
 
                       DropdownButtonFormField<int>(
@@ -209,6 +306,7 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
                           if (value == null) {
                             return 'Periode wajib dipilih';
                           }
+
                           return null;
                         },
                       ),
@@ -217,6 +315,7 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
 
                       TextFormField(
                         controller: _codeController,
+                        textCapitalization: TextCapitalization.characters,
                         decoration: const InputDecoration(
                           labelText: 'Kode Kriteria',
                           hintText: 'Contoh: C1',
@@ -227,6 +326,7 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
                           if (value == null || value.trim().isEmpty) {
                             return 'Kode kriteria wajib diisi';
                           }
+
                           return null;
                         },
                       ),
@@ -245,6 +345,7 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
                           if (value == null || value.trim().isEmpty) {
                             return 'Nama kriteria wajib diisi';
                           }
+
                           return null;
                         },
                       ),
@@ -253,10 +354,12 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
 
                       TextFormField(
                         controller: _weightController,
-                        keyboardType: TextInputType.number,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         decoration: const InputDecoration(
-                          labelText: 'Bobot',
-                          hintText: 'Contoh: 0.25',
+                          labelText: 'Bobot Kriteria (%)',
+                          hintText: 'Contoh: 25',
                           prefixIcon: Icon(Icons.scale),
                           border: OutlineInputBorder(),
                         ),
@@ -265,14 +368,20 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
                             return 'Bobot wajib diisi';
                           }
 
-                          final weight = double.tryParse(value.trim());
+                          final weight = double.tryParse(
+                            value.trim().replaceAll(',', '.'),
+                          );
 
                           if (weight == null) {
                             return 'Bobot harus berupa angka';
                           }
 
-                          if (weight < 0) {
-                            return 'Bobot tidak boleh negatif';
+                          if (weight <= 0) {
+                            return 'Bobot harus lebih dari 0';
+                          }
+
+                          if (weight > 100) {
+                            return 'Maksimal 100';
                           }
 
                           return null;
@@ -295,7 +404,9 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
                           );
                         }).toList(),
                         onChanged: (value) {
-                          if (value == null) return;
+                          if (value == null) {
+                            return;
+                          }
 
                           setState(() {
                             _type = value;
@@ -310,7 +421,10 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
                           Expanded(
                             child: TextFormField(
                               controller: _minScoreController,
-                              keyboardType: TextInputType.number,
+                              keyboardType:
+                              const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
                               decoration: const InputDecoration(
                                 labelText: 'Nilai Minimum',
                                 hintText: '0',
@@ -321,7 +435,9 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
                                   return 'Wajib diisi';
                                 }
 
-                                final score = double.tryParse(value.trim());
+                                final score = double.tryParse(
+                                  value.trim().replaceAll(',', '.'),
+                                );
 
                                 if (score == null) {
                                   return 'Harus angka';
@@ -335,7 +451,10 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
                           Expanded(
                             child: TextFormField(
                               controller: _maxScoreController,
-                              keyboardType: TextInputType.number,
+                              keyboardType:
+                              const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
                               decoration: const InputDecoration(
                                 labelText: 'Nilai Maksimum',
                                 hintText: '100',
@@ -346,18 +465,21 @@ class _CriterionFormScreenState extends State<CriterionFormScreen> {
                                   return 'Wajib diisi';
                                 }
 
-                                final maxScore =
-                                double.tryParse(value.trim());
+                                final maxScore = double.tryParse(
+                                  value.trim().replaceAll(',', '.'),
+                                );
+
                                 final minScore = double.tryParse(
-                                  _minScoreController.text.trim(),
+                                  _minScoreController.text
+                                      .trim()
+                                      .replaceAll(',', '.'),
                                 );
 
                                 if (maxScore == null) {
                                   return 'Harus angka';
                                 }
 
-                                if (minScore != null &&
-                                    maxScore <= minScore) {
+                                if (minScore != null && maxScore <= minScore) {
                                   return 'Harus > min';
                                 }
 

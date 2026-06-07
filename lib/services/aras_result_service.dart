@@ -81,5 +81,29 @@ class ArasResultService {
       throw Exception(_errorMessage(e, 'Gagal menghapus hasil ARAS.'));
     }
   }
-}
 
+  Future<List<ArasResultModel>> getPublicResults({int? periodId}) async {
+    try {
+      final response = await apiClient.dio.get(
+        ApiConstants.publicResults,
+        queryParameters: {
+          'period_id': ?periodId,
+        },
+      );
+
+      final data = _extractList(response.data);
+
+      return data
+          .map(
+            (item) => ArasResultModel.fromJson(
+          Map<String, dynamic>.from(item),
+        ),
+      )
+          .toList();
+    } on DioException catch (e) {
+      throw Exception(
+        _errorMessage(e, 'Gagal mengambil hasil pemilihan publik.'),
+      );
+    }
+  }
+}

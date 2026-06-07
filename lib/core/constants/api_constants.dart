@@ -29,4 +29,5 @@ class ApiConstants {
   static const String juryDashboardSummary = '/jury/dashboard-summary';
   static const String juryScoringCandidates = '/jury/scoring-candidates';
   static const String juryScoringHistory = '/jury/scoring-history';
+  static const String publicResults = '/public/results';
 }

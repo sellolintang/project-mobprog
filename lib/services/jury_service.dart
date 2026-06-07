@@ -43,9 +43,23 @@ class JuryService {
     return [];
   }
 
-  Future<List<JuryModel>> getJuries() async {
+  Future<List<JuryModel>> getJuries({
+    int? periodId,
+  }) async {
     try {
-      final response = await apiClient.dio.get(ApiConstants.juries);
+      final Map<String, dynamic> queryParams = {
+        'per_page': 100,
+      };
+
+      if (periodId != null) {
+        queryParams['period_id'] = periodId;
+      }
+
+      final response = await apiClient.dio.get(
+        ApiConstants.juries,
+        queryParameters: queryParams,
+      );
+
       final data = _extractList(response.data);
 
       return data

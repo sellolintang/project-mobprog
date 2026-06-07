@@ -27,6 +27,7 @@ class AdminDashboardScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Dashboard Admin'),
         actions: [
           IconButton(

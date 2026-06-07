@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../models/candidate_model.dart';
 import '../../../providers/candidate_provider.dart';
+import '../../../core/constants/api_constants.dart';
 
 class CandidateDetailScreen extends StatelessWidget {
   const CandidateDetailScreen({super.key});
@@ -168,6 +170,71 @@ class CandidateDetailScreen extends StatelessWidget {
     }
   }
 
+  String? _storageUrl(String? path) {
+    if (path == null || path.trim().isEmpty) {
+      return null;
+    }
+
+    final baseServerUrl = ApiConstants.baseUrl.replaceFirst(
+      RegExp(r'/api/?$'),
+      '',
+    );
+
+    final cleanPath = path.startsWith('/') ? path.substring(1) : path;
+
+    return '$baseServerUrl/storage/$cleanPath';
+  }
+
+  Future<void> _openFile(BuildContext context, String? path) async {
+    final url = _storageUrl(path);
+
+    if (url == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('File belum tersedia.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final uri = Uri.parse(url);
+
+    final canOpen = await canLaunchUrl(uri);
+
+    if (!canOpen) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Tidak dapat membuka file: $url'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+  }
+
+  Widget _documentButton({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required String? path,
+  }) {
+    final available = path != null && path.trim().isNotEmpty;
+
+    return OutlinedButton.icon(
+      onPressed: available ? () => _openFile(context, path) : null,
+      icon: Icon(icon),
+      label: Text(available ? label : '$label belum tersedia'),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments;
@@ -245,6 +312,37 @@ class CandidateDetailScreen extends StatelessWidget {
                   ),
                   _infoItem('Visi', candidate.vision),
                   _infoItem('Misi', candidate.mission),
+                  const SizedBox(height: 12),
+
+                  const Divider(),
+
+                  const SizedBox(height: 12),
+
+                  const Text(
+                    'Dokumen Pendaftaran',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _documentButton(
+                    context: context,
+                    label: 'Buka Foto Calon',
+                    icon: Icons.image_outlined,
+                    path: candidate.photoFile,
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  _documentButton(
+                    context: context,
+                    label: 'Buka CV / Berkas',
+                    icon: Icons.description_outlined,
+                    path: candidate.cvFile,
+                  ),
                   _infoItem('Alasan Penolakan', candidate.rejectionReason),
                 ],
               ),

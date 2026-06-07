@@ -33,16 +33,17 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Duta Kampus Mobile'),
-        actions: [
-          TextButton.icon(
-            onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.login);
-            },
-            icon: const Icon(Icons.login),
-            label: const Text('Login'),
-          ),
-        ],
+        // actions: [
+        //   TextButton.icon(
+        //     onPressed: () {
+        //       Navigator.pushNamed(context, AppRoutes.login);
+        //     },
+        //     icon: const Icon(Icons.login),
+        //     label: const Text('Login'),
+        //   ),
+        // ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),

@@ -14,13 +14,17 @@ class JuryProvider extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
-  Future<void> fetchJuries() async {
+  Future<void> fetchJuries({
+    int? periodId,
+  }) async {
     try {
       isLoading = true;
       errorMessage = null;
       notifyListeners();
 
-      juries = await juryService.getJuries();
+      juries = await juryService.getJuries(
+        periodId: periodId,
+      );
 
       isLoading = false;
       notifyListeners();
@@ -56,7 +60,7 @@ class JuryProvider extends ChangeNotifier {
         body: 'Akun juri $name berhasil ditambahkan.',
       );
 
-      await fetchJuries();
+      await fetchJuries(periodId: periodId);
       return true;
     } catch (e) {
       errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -92,7 +96,7 @@ class JuryProvider extends ChangeNotifier {
         body: 'Akun juri $name berhasil diperbarui.',
       );
 
-      await fetchJuries();
+      await fetchJuries(periodId: periodId);
       return true;
     } catch (e) {
       errorMessage = e.toString().replaceFirst('Exception: ', '');

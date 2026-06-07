@@ -13,7 +13,12 @@ class PeriodFormScreen extends StatefulWidget {
 
 class _PeriodFormScreenState extends State<PeriodFormScreen> {
   final _formKey = GlobalKey<FormState>();
+
   final _yearController = TextEditingController();
+  final _registrationStartController = TextEditingController();
+  final _registrationEndController = TextEditingController();
+  final _interviewStartController = TextEditingController();
+  final _interviewEndController = TextEditingController();
 
   String _status = 'draft';
   bool _isSubmitting = false;
@@ -35,19 +40,90 @@ class _PeriodFormScreenState extends State<PeriodFormScreen> {
 
     if (args is PeriodModel && _period == null) {
       _period = args;
+
       _yearController.text = args.electionYear.toString();
       _status = args.status;
+
+      _registrationStartController.text = _normalizeDate(args.registrationStart);
+      _registrationEndController.text = _normalizeDate(args.registrationEnd);
+      _interviewStartController.text = _normalizeDate(args.interviewStart);
+      _interviewEndController.text = _normalizeDate(args.interviewEnd);
     }
   }
 
   @override
   void dispose() {
     _yearController.dispose();
+    _registrationStartController.dispose();
+    _registrationEndController.dispose();
+    _interviewStartController.dispose();
+    _interviewEndController.dispose();
     super.dispose();
   }
 
+  String _normalizeDate(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return '';
+    }
+
+    final date = value.trim();
+
+    if (date.length >= 10) {
+      return date.substring(0, 10);
+    }
+
+    return date;
+  }
+
+  String? _emptyToNull(String value) {
+    final text = value.trim();
+
+    if (text.isEmpty) {
+      return null;
+    }
+
+    return text;
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year.toString().padLeft(4, '0')}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _pickDate(TextEditingController controller) async {
+    final initialDate = DateTime.tryParse(controller.text) ?? DateTime.now();
+
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate == null) {
+      return;
+    }
+
+    controller.text = _formatDate(pickedDate);
+  }
+
+  void _showMessage({
+    required String message,
+    required bool success,
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: success ? Colors.green : Colors.red,
+      ),
+    );
+  }
+
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     setState(() {
       _isSubmitting = true;
@@ -62,35 +138,75 @@ class _PeriodFormScreenState extends State<PeriodFormScreen> {
       success = await provider.createPeriod(
         electionYear: electionYear,
         status: _status,
+        registrationStart: _emptyToNull(_registrationStartController.text),
+        registrationEnd: _emptyToNull(_registrationEndController.text),
+        interviewStart: _emptyToNull(_interviewStartController.text),
+        interviewEnd: _emptyToNull(_interviewEndController.text),
       );
     } else {
       success = await provider.updatePeriod(
         id: _period!.id,
         electionYear: electionYear,
         status: _status,
+        registrationStart: _emptyToNull(_registrationStartController.text),
+        registrationEnd: _emptyToNull(_registrationEndController.text),
+        interviewStart: _emptyToNull(_interviewStartController.text),
+        interviewEnd: _emptyToNull(_interviewEndController.text),
       );
     }
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     setState(() {
       _isSubmitting = false;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? 'Data periode berhasil disimpan.'
-              : provider.errorMessage ?? 'Gagal menyimpan periode.',
-        ),
-        backgroundColor: success ? Colors.green : Colors.red,
-      ),
+    _showMessage(
+      message: success
+          ? 'Data periode berhasil disimpan.'
+          : provider.errorMessage ?? 'Gagal menyimpan periode.',
+      success: success,
     );
 
     if (success) {
       Navigator.pop(context);
     }
+  }
+
+  Widget _dateField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+  }) {
+    return TextFormField(
+      controller: controller,
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: 'YYYY-MM-DD',
+        prefixIcon: Icon(icon),
+        border: const OutlineInputBorder(),
+        suffixIcon: controller.text.isEmpty
+            ? null
+            : IconButton(
+          onPressed: () {
+            setState(() {
+              controller.clear();
+            });
+          },
+          icon: const Icon(Icons.close),
+        ),
+      ),
+      onTap: () async {
+        await _pickDate(controller);
+
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
   }
 
   @override
@@ -105,7 +221,7 @@ class _PeriodFormScreenState extends State<PeriodFormScreen> {
         padding: const EdgeInsets.all(16),
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
+            constraints: const BoxConstraints(maxWidth: 560),
             child: Card(
               child: Padding(
                 padding: const EdgeInsets.all(20),
@@ -176,12 +292,46 @@ class _PeriodFormScreenState extends State<PeriodFormScreen> {
                           );
                         }).toList(),
                         onChanged: (value) {
-                          if (value == null) return;
+                          if (value == null) {
+                            return;
+                          }
 
                           setState(() {
                             _status = value;
                           });
                         },
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      _dateField(
+                        controller: _registrationStartController,
+                        label: 'Mulai Pendaftaran',
+                        icon: Icons.date_range,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      _dateField(
+                        controller: _registrationEndController,
+                        label: 'Akhir Pendaftaran',
+                        icon: Icons.event_available,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      _dateField(
+                        controller: _interviewStartController,
+                        label: 'Mulai Wawancara',
+                        icon: Icons.record_voice_over,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      _dateField(
+                        controller: _interviewEndController,
+                        label: 'Akhir Wawancara',
+                        icon: Icons.event_note,
                       ),
 
                       const SizedBox(height: 24),
