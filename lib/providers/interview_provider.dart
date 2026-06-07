@@ -13,6 +13,7 @@ class InterviewProvider extends ChangeNotifier {
   List<InterviewModel> interviews = [];
   bool isLoading = false;
   String? errorMessage;
+  String? successMessage;
 
   Future<void> fetchInterviews() async {
     try {
@@ -25,6 +26,7 @@ class InterviewProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     } catch (e) {
+      successMessage = null;
       isLoading = false;
       errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
@@ -38,21 +40,24 @@ class InterviewProvider extends ChangeNotifier {
     required String status,
   }) async {
     try {
-      await interviewService.createInterview(
+      final message = await interviewService.createInterview(
         candidateId: candidateId,
         scheduledAt: scheduledAt,
         location: location,
         status: status,
       );
 
+      successMessage = message;
+
       await NotificationService.showNotification(
         title: 'Jadwal Ditambahkan',
-        body: 'Jadwal wawancara berhasil ditambahkan.',
+        body: message,
       );
 
       await fetchInterviews();
       return true;
     } catch (e) {
+      successMessage = null;
       errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
       return false;
@@ -83,6 +88,7 @@ class InterviewProvider extends ChangeNotifier {
       await fetchInterviews();
       return true;
     } catch (e) {
+      successMessage = null;
       errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
       return false;
@@ -101,6 +107,7 @@ class InterviewProvider extends ChangeNotifier {
       await fetchInterviews();
       return true;
     } catch (e) {
+      successMessage = null;
       errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
       return false;
@@ -115,7 +122,7 @@ class InterviewProvider extends ChangeNotifier {
     String? location,
   }) async {
     try {
-      await interviewService.generateInterviews(
+      final message = await interviewService.generateInterviews(
         periodId: periodId,
         interviewDate: interviewDate,
         startTime: startTime,
@@ -123,14 +130,17 @@ class InterviewProvider extends ChangeNotifier {
         location: location,
       );
 
+      successMessage = message;
+
       await NotificationService.showNotification(
         title: 'Jadwal Otomatis Dibuat',
-        body: 'Jadwal wawancara berhasil dibuat otomatis.',
+        body: message,
       );
 
       await fetchInterviews();
       return true;
     } catch (e) {
+      successMessage = null;
       errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
       return false;
@@ -149,6 +159,7 @@ class InterviewProvider extends ChangeNotifier {
       await fetchInterviews();
       return true;
     } catch (e) {
+      successMessage = null;
       errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
       return false;

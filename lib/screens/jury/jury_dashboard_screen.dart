@@ -709,6 +709,13 @@ class _JuryDashboardScreenState extends State<JuryDashboardScreen> {
             icon: const Icon(Icons.refresh),
           ),
           IconButton(
+            tooltip: 'Keamanan Akun',
+            onPressed: () {
+              Navigator.pushNamed(context, AppRoutes.securitySettings);
+            },
+            icon: const Icon(Icons.security),
+          ),
+          IconButton(
             tooltip: 'Logout',
             onPressed: () => _logout(context),
             icon: const Icon(Icons.logout),

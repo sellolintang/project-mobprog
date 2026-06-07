@@ -13,11 +13,33 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
+  bool _canUseBiometric = false;
+  bool _checkingBiometric = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkBiometricAvailability();
+    });
+  }
+
+  Future<void> _checkBiometricAvailability() async {
+    final authProvider = context.read<AuthProvider>();
+    final canUse = await authProvider.canUseBiometricLogin();
+
+    if (!mounted) return;
+
+    setState(() {
+      _canUseBiometric = canUse;
+      _checkingBiometric = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -26,10 +48,31 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  void _goToDashboard(AuthProvider authProvider) {
+    if (authProvider.role == 'admin') {
+      Navigator.pushReplacementNamed(
+        context,
+        AppRoutes.adminDashboard,
+      );
+    } else if (authProvider.role == 'juri') {
+      Navigator.pushReplacementNamed(
+        context,
+        AppRoutes.juryDashboard,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Role pengguna tidak dikenali.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = context.read<AuthProvider>();
 
     final success = await authProvider.login(
       _emailController.text.trim(),
@@ -41,25 +84,36 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.errorMessage ?? 'Login gagal'),
+          content: Text(authProvider.errorMessage ?? 'Login gagal.'),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
-    if (authProvider.role == 'admin') {
-      Navigator.pushReplacementNamed(context, AppRoutes.adminDashboard);
-    } else if (authProvider.role == 'juri') {
-      Navigator.pushReplacementNamed(context, AppRoutes.juryDashboard);
-    } else {
+    _goToDashboard(authProvider);
+  }
+
+  Future<void> _loginWithBiometric() async {
+    final authProvider = context.read<AuthProvider>();
+
+    final success = await authProvider.biometricLogin();
+
+    if (!mounted) return;
+
+    if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Role pengguna tidak dikenali.'),
+        SnackBar(
+          content: Text(
+            authProvider.errorMessage ?? 'Login biometric gagal.',
+          ),
           backgroundColor: Colors.red,
         ),
       );
+      return;
     }
+
+    _goToDashboard(authProvider);
   }
 
   void _backToHome() {
@@ -178,11 +232,27 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                             ),
 
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 8),
+
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: authProvider.isLoading
+                                    ? null
+                                    : () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.forgotPassword,
+                                  );
+                                },
+                                child: const Text('Lupa Password?'),
+                              ),
+                            ),
+
+                            const SizedBox(height: 16),
 
                             ElevatedButton(
-                              onPressed:
-                              authProvider.isLoading ? null : _login,
+                              onPressed: authProvider.isLoading ? null : _login,
                               style: ElevatedButton.styleFrom(
                                 padding:
                                 const EdgeInsets.symmetric(vertical: 14),
@@ -203,13 +273,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: TextStyle(fontSize: 16),
                               ),
                             ),
-                            const SizedBox(height: 12),
 
-                            // TextButton.icon(
-                            //   onPressed: authProvider.isLoading ? null : _backToHome,
-                            //   icon: const Icon(Icons.home_outlined),
-                            //   label: const Text('Kembali ke Halaman Utama'),
-                            // ),
+                            if (!_checkingBiometric && _canUseBiometric) ...[
+                              const SizedBox(height: 12),
+                              OutlinedButton.icon(
+                                onPressed: authProvider.isLoading
+                                    ? null
+                                    : _loginWithBiometric,
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.fingerprint),
+                                label: const Text(
+                                  'Login dengan Biometric',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),

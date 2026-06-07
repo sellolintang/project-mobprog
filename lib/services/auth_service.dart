@@ -115,6 +115,36 @@ class AuthService {
     }
   }
 
+  Future<String> forgotPassword({
+    required String email,
+  }) async {
+    try {
+      final response = await apiClient.dio.post(
+        ApiConstants.forgotPassword,
+        data: {
+          'email': email,
+        },
+      );
+
+      final responseData = response.data;
+
+      if (responseData is Map && responseData['message'] != null) {
+        return responseData['message'].toString();
+      }
+
+      return 'Instruksi reset password telah dikirim ke email Anda.';
+    } on DioException catch (e) {
+      throw Exception(
+        _errorMessage(
+          e,
+          'Gagal mengirim instruksi reset password.',
+        ),
+      );
+    } catch (e) {
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
   Future<void> logout() async {
     try {
       await apiClient.dio.post(ApiConstants.logout);

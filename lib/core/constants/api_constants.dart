@@ -11,6 +11,7 @@ class ApiConstants {
   static const String login = '/login';
   static const String logout = '/logout';
   static const String me = '/me';
+  static const String forgotPassword = '/forgot-password';
 
   static const String periods = '/periods';
   static const String candidates = '/candidates';

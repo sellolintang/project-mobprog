@@ -154,7 +154,10 @@ class _InterviewFormScreenState extends State<InterviewFormScreen> {
       SnackBar(
         content: Text(
           success
-              ? 'Jadwal wawancara berhasil disimpan.'
+              ? provider.successMessage ??
+              (_interview == null
+                  ? 'Jadwal wawancara berhasil dibuat dan email jadwal dikirim ke calon.'
+                  : 'Jadwal wawancara berhasil diperbarui.')
               : provider.errorMessage ?? 'Gagal menyimpan jadwal wawancara.',
         ),
         backgroundColor: success ? Colors.green : Colors.red,

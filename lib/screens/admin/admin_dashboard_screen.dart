@@ -317,113 +317,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _periodSummaryCard() {
-    final period = _stats.mainPeriod;
-
-    if (_isLoadingDashboard && period == null) {
-      return const Card(
-        child: ListTile(
-          leading: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-          title: Text('Memuat periode aktif...'),
-          subtitle: Text('Sistem sedang mengambil data periode.'),
-        ),
-      );
-    }
-
-    if (period == null) {
-      return Card(
-        color: const Color(0xFFFFFBEB),
-        child: ListTile(
-          leading: const Icon(
-            Icons.event_busy,
-            color: Colors.orange,
-          ),
-          title: const Text(
-            'Belum Ada Periode',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          subtitle: const Text(
-            'Silakan buat periode pemilihan terlebih dahulu.',
-          ),
-          trailing: FilledButton(
-            onPressed: () => _openRouteAndRefresh(AppRoutes.periodList),
-            child: const Text('Kelola'),
-          ),
-        ),
-      );
-    }
-
-    final color = _periodStatusColor(period.status);
-
-    return Card(
-      color: const Color(0xFFEFF6FF),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              backgroundColor: color.withOpacity(0.16),
-              child: Icon(Icons.event_available, color: color),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Periode Duta Kampus ${period.electionYear}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      Chip(
-                        label: Text(
-                          _periodStatusLabel(period.status),
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        backgroundColor: color,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      Chip(
-                        label: Text('${_stats.totalPeriods} periode tersimpan'),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  if ((period.registrationStart ?? '').isNotEmpty)
-                    Text('Pendaftaran mulai: ${period.registrationStart}'),
-                  if ((period.registrationEnd ?? '').isNotEmpty)
-                    Text('Pendaftaran berakhir: ${period.registrationEnd}'),
-                  if ((period.interviewStart ?? '').isNotEmpty)
-                    Text('Wawancara mulai: ${period.interviewStart}'),
-                  if ((period.interviewEnd ?? '').isNotEmpty)
-                    Text('Wawancara berakhir: ${period.interviewEnd}'),
-                ],
-              ),
-            ),
-            IconButton(
-              tooltip: 'Kelola periode',
-              onPressed: () => _openRouteAndRefresh(AppRoutes.periodList),
-              icon: const Icon(Icons.chevron_right),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _statsSection() {
     if (_isLoadingDashboard && _stats.totalCandidates == 0) {
       return const Card(
@@ -603,6 +496,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ? null
                 : () => _loadDashboardData(showLocalNotification: false),
             icon: const Icon(Icons.refresh),
+          ),
+          IconButton(
+            tooltip: 'Keamanan Akun',
+            onPressed: () {
+              Navigator.pushNamed(context, AppRoutes.securitySettings);
+            },
+            icon: const Icon(Icons.security),
           ),
           IconButton(
             tooltip: 'Logout',

@@ -2,6 +2,7 @@ class AppRoutes {
   static const String splash = '/';
   static const String publicHome = '/public-home';
   static const String login = '/login';
+  static const String forgotPassword = '/forgot-password';
 
   static const String adminDashboard = '/admin-dashboard';
   static const String juryDashboard = '/jury-dashboard';
@@ -32,4 +33,6 @@ class AppRoutes {
   static const String scoringHistory = '/scoring-history';
 
   static const String scoreMonitoring = '/score-monitoring';
+
+  static const String securitySettings = '/security-settings';
 }

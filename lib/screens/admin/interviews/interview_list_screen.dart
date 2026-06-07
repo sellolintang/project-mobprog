@@ -262,7 +262,8 @@ class _InterviewListScreenState extends State<InterviewListScreen> {
       SnackBar(
         content: Text(
           success
-              ? 'Jadwal otomatis berhasil dibuat.'
+              ? provider.successMessage ??
+              'Jadwal otomatis berhasil dibuat dan email jadwal dikirim ke calon.'
               : provider.errorMessage ?? 'Gagal generate jadwal.',
         ),
         backgroundColor: success ? Colors.green : Colors.red,

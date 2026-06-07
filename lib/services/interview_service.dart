@@ -20,6 +20,14 @@ class InterviewService {
     return fallback;
   }
 
+  String _successMessage(dynamic data, String fallback) {
+    if (data is Map && data['message'] != null) {
+      return data['message'].toString();
+    }
+
+    return fallback;
+  }
+
   List _extractList(dynamic responseData) {
     if (responseData is List) {
       return responseData;
@@ -61,14 +69,14 @@ class InterviewService {
     }
   }
 
-  Future<void> createInterview({
+  Future<String> createInterview({
     required int candidateId,
     required String scheduledAt,
     String? location,
     required String status,
   }) async {
     try {
-      await apiClient.dio.post(
+      final response = await apiClient.dio.post(
         ApiConstants.interviews,
         data: {
           'candidate_id': candidateId,
@@ -76,6 +84,13 @@ class InterviewService {
           'location': location,
           'status': status,
         },
+      );
+
+      return _successMessage(
+        response.data,
+        status == 'scheduled'
+            ? 'Jadwal wawancara berhasil dibuat dan email jadwal dikirim ke calon.'
+            : 'Jadwal wawancara berhasil dibuat.',
       );
     } on DioException catch (e) {
       throw Exception(_errorMessage(e, 'Gagal menambahkan jadwal wawancara.'));
@@ -112,7 +127,7 @@ class InterviewService {
     }
   }
 
-  Future<void> generateInterviews({
+  Future<String> generateInterviews({
     required int periodId,
     required String interviewDate,
     required String startTime,
@@ -120,7 +135,7 @@ class InterviewService {
     String? location,
   }) async {
     try {
-      await apiClient.dio.post(
+      final response = await apiClient.dio.post(
         ApiConstants.generateInterviews,
         data: {
           'period_id': periodId,
@@ -129,6 +144,11 @@ class InterviewService {
           'duration_minutes': durationMinutes,
           'location': location,
         },
+      );
+
+      return _successMessage(
+        response.data,
+        'Jadwal otomatis berhasil dibuat dan email jadwal dikirim ke calon.',
       );
     } on DioException catch (e) {
       throw Exception(_errorMessage(e, 'Gagal membuat jadwal otomatis.'));
