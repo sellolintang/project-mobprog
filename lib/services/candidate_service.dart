@@ -2,13 +2,13 @@ import 'package:dio/dio.dart';
 
 import '../core/constants/api_constants.dart';
 import '../core/network/api_client.dart';
+import '../models/candidate_action_result.dart';
 import '../models/candidate_model.dart';
 
 class CandidateService {
   final ApiClient apiClient;
 
-  CandidateService({ApiClient? apiClient})
-      : apiClient = apiClient ?? ApiClient();
+  CandidateService({ApiClient? apiClient}) : apiClient = apiClient ?? ApiClient();
 
   String _errorMessage(DioException e, String fallback) {
     final data = e.response?.data;
@@ -20,7 +20,7 @@ class CandidateService {
     return fallback;
   }
 
-  List<dynamic> _extractList(dynamic responseData) {
+  List _extractList(dynamic responseData) {
     if (responseData is List) {
       return responseData;
     }
@@ -33,11 +33,11 @@ class CandidateService {
       }
 
       if (data is Map && data['data'] is List) {
-        return List<dynamic>.from(data['data']);
+        return List.from(data['data']);
       }
 
       if (data is Map && data['items'] is List) {
-        return List<dynamic>.from(data['items']);
+        return List.from(data['items']);
       }
     }
 
@@ -69,10 +69,14 @@ class CandidateService {
     }
   }
 
-  Future<void> validateCandidate(int id) async {
+  Future<CandidateActionResult> validateCandidate(int id) async {
     try {
-      await apiClient.dio.patch(
+      final response = await apiClient.dio.patch(
         '${ApiConstants.candidates}/$id/validate',
+      );
+
+      return CandidateActionResult.fromJson(
+        Map<String, dynamic>.from(response.data as Map),
       );
     } on DioException catch (e) {
       throw Exception(
@@ -81,16 +85,20 @@ class CandidateService {
     }
   }
 
-  Future<void> rejectCandidate({
+  Future<CandidateActionResult> rejectCandidate({
     required int id,
     required String rejectionReason,
   }) async {
     try {
-      await apiClient.dio.patch(
+      final response = await apiClient.dio.patch(
         '${ApiConstants.candidates}/$id/reject',
         data: {
           'rejection_reason': rejectionReason,
         },
+      );
+
+      return CandidateActionResult.fromJson(
+        Map<String, dynamic>.from(response.data as Map),
       );
     } on DioException catch (e) {
       throw Exception(

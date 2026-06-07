@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/notifications/notification_service.dart';
+import '../models/candidate_action_result.dart';
 import '../models/candidate_model.dart';
 import '../services/candidate_service.dart';
 
@@ -13,6 +14,7 @@ class CandidateProvider extends ChangeNotifier {
   List<CandidateModel> candidates = [];
   bool isLoading = false;
   String? errorMessage;
+  CandidateActionResult? lastActionResult;
 
   Future<void> fetchCandidates() async {
     try {
@@ -33,11 +35,18 @@ class CandidateProvider extends ChangeNotifier {
 
   Future<bool> validateCandidate(int id, String candidateName) async {
     try {
-      await candidateService.validateCandidate(id);
+      errorMessage = null;
+      lastActionResult = null;
+      notifyListeners();
+
+      final result = await candidateService.validateCandidate(id);
+      lastActionResult = result;
 
       await NotificationService.showNotification(
-        title: 'Calon Divalidasi',
-        body: '$candidateName berhasil divalidasi.',
+        title: 'Calon Diterima',
+        body: result.emailSent
+            ? '$candidateName berhasil diterima dan email penerimaan sudah dikirim.'
+            : '$candidateName berhasil diterima, tetapi email gagal dikirim.',
       );
 
       await fetchCandidates();
@@ -55,14 +64,22 @@ class CandidateProvider extends ChangeNotifier {
     required String rejectionReason,
   }) async {
     try {
-      await candidateService.rejectCandidate(
+      errorMessage = null;
+      lastActionResult = null;
+      notifyListeners();
+
+      final result = await candidateService.rejectCandidate(
         id: id,
         rejectionReason: rejectionReason,
       );
 
+      lastActionResult = result;
+
       await NotificationService.showNotification(
         title: 'Calon Ditolak',
-        body: '$candidateName berhasil ditolak.',
+        body: result.emailSent
+            ? '$candidateName berhasil ditolak dan email penolakan sudah dikirim.'
+            : '$candidateName berhasil ditolak, tetapi email gagal dikirim.',
       );
 
       await fetchCandidates();
@@ -76,6 +93,7 @@ class CandidateProvider extends ChangeNotifier {
 
   Future<bool> deleteCandidate(int id) async {
     try {
+      errorMessage = null;
       await candidateService.deleteCandidate(id);
 
       await NotificationService.showNotification(

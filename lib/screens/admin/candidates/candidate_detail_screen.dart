@@ -13,6 +13,31 @@ class CandidateDetailScreen extends StatelessWidget {
       BuildContext context,
       CandidateModel candidate,
       ) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Terima Calon'),
+          content: Text(
+            'Yakin ingin menerima ${candidate.fullName}? '
+                'Sistem akan mengirim email penerimaan ke ${candidate.email}.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Terima & Kirim Email'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm != true || !context.mounted) return;
+
     final provider = context.read<CandidateProvider>();
 
     final success = await provider.validateCandidate(
@@ -22,14 +47,26 @@ class CandidateDetailScreen extends StatelessWidget {
 
     if (!context.mounted) return;
 
+    final result = provider.lastActionResult;
+
+    String message;
+    Color color;
+
+    if (success && result?.emailSent == true) {
+      message = 'Calon diterima dan email penerimaan berhasil dikirim.';
+      color = Colors.green;
+    } else if (success && result?.emailSent == false) {
+      message = 'Calon diterima, tetapi email penerimaan gagal dikirim.';
+      color = Colors.orange;
+    } else {
+      message = provider.errorMessage ?? 'Gagal memvalidasi calon.';
+      color = Colors.red;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          success
-              ? 'Calon berhasil divalidasi.'
-              : provider.errorMessage ?? 'Gagal memvalidasi calon.',
-        ),
-        backgroundColor: success ? Colors.green : Colors.red,
+        content: Text(message),
+        backgroundColor: color,
       ),
     );
 
@@ -49,13 +86,22 @@ class CandidateDetailScreen extends StatelessWidget {
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Tolak Calon'),
-          content: TextField(
-            controller: reasonController,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'Alasan penolakan',
-              border: OutlineInputBorder(),
-            ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Sistem akan mengirim email penolakan ke ${candidate.email}.',
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: reasonController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Alasan penolakan',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -69,7 +115,11 @@ class CandidateDetailScreen extends StatelessWidget {
                   reasonController.text.trim(),
                 );
               },
-              child: const Text('Tolak'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Tolak & Kirim Email'),
             ),
           ],
         );
@@ -90,14 +140,26 @@ class CandidateDetailScreen extends StatelessWidget {
 
     if (!context.mounted) return;
 
+    final result = provider.lastActionResult;
+
+    String message;
+    Color color;
+
+    if (success && result?.emailSent == true) {
+      message = 'Calon ditolak dan email penolakan berhasil dikirim.';
+      color = Colors.green;
+    } else if (success && result?.emailSent == false) {
+      message = 'Calon ditolak, tetapi email penolakan gagal dikirim.';
+      color = Colors.orange;
+    } else {
+      message = provider.errorMessage ?? 'Gagal menolak calon.';
+      color = Colors.red;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          success
-              ? 'Calon berhasil ditolak.'
-              : provider.errorMessage ?? 'Gagal menolak calon.',
-        ),
-        backgroundColor: success ? Colors.green : Colors.red,
+        content: Text(message),
+        backgroundColor: color,
       ),
     );
 
