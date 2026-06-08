@@ -156,7 +156,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Text(
-                'Catatan: biometric login hanya muncul jika user pernah login normal, token masih tersimpan, dan fitur biometric aktif. Jika user logout, token akan dihapus sehingga user perlu login normal kembali.',
+                'Catatan: biometric login hanya muncul jika anda menekan tombol Kunci Aplikasi',
                 style: TextStyle(
                   color: Colors.black54,
                   height: 1.4,

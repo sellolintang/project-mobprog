@@ -160,7 +160,7 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Duta Kampus Mobile'),
+        title: const Text('Duta PNJ'),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -181,7 +181,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Pemilihan Duta Kampus',
+                  'Pemilihan Duta PNJ',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 26,
@@ -197,24 +197,24 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.candidateRegistration,
-                      );
-                    },
-                    icon: const Icon(Icons.app_registration),
-                    label: const Text('Daftar Sekarang'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF1E3A8A),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                  ),
-                ),
+                // SizedBox(
+                //   width: double.infinity,
+                //   child: ElevatedButton.icon(
+                //     onPressed: () {
+                //       Navigator.pushNamed(
+                //         context,
+                //         AppRoutes.candidateRegistration,
+                //       );
+                //     },
+                //     icon: const Icon(Icons.app_registration),
+                //     label: const Text('Daftar Sekarang'),
+                //     style: ElevatedButton.styleFrom(
+                //       backgroundColor: Colors.white,
+                //       foregroundColor: const Color(0xFF1E3A8A),
+                //       padding: const EdgeInsets.symmetric(vertical: 14),
+                //     ),
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -262,9 +262,9 @@ class HomeScreen extends StatelessWidget {
           ),
           _infoCard(
             icon: Icons.email_outlined,
-            title: 'Email Aktif',
+            title: 'Email Akademik',
             body:
-            'Gunakan email aktif karena hasil validasi diterima atau ditolak akan dikirim melalui email.',
+            'Gunakan email akdemik karena hasil validasi diterima atau ditolak akan dikirim melalui email.',
           ),
 
           _sectionTitle('Alur Seleksi', Icons.route_outlined),
@@ -324,7 +324,7 @@ class HomeScreen extends StatelessWidget {
               ),
               title: Text('Informasi Seleksi Duta Kampus'),
               subtitle: Text(
-                'Jika ada kendala pendaftaran, hubungi panitia pemilihan Duta Kampus melalui kontak resmi kampus.',
+                'Jika ada kendala pendaftaran, hubungi panitia pemilihan Duta Kampus melalui kontak resmi Humas PNJ.',
               ),
             ),
           ),

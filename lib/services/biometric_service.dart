@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 
 class BiometricService {
@@ -10,10 +12,16 @@ class BiometricService {
       final List<BiometricType> availableBiometrics =
       await _auth.getAvailableBiometrics();
 
-      return isSupported &&
-          canCheckBiometrics &&
-          availableBiometrics.isNotEmpty;
-    } catch (_) {
+      debugPrint('BIO isSupported: $isSupported');
+      debugPrint('BIO canCheckBiometrics: $canCheckBiometrics');
+      debugPrint('BIO availableBiometrics: $availableBiometrics');
+
+      return isSupported || canCheckBiometrics || availableBiometrics.isNotEmpty;
+    } on PlatformException catch (e) {
+      debugPrint('BIO canUseBiometric PlatformException: ${e.code} - ${e.message}');
+      return false;
+    } catch (e) {
+      debugPrint('BIO canUseBiometric error: $e');
       return false;
     }
   }
@@ -23,15 +31,23 @@ class BiometricService {
       final bool canUse = await canUseBiometric();
 
       if (!canUse) {
+        debugPrint('BIO authenticate stopped: device cannot use biometric/local auth.');
         return false;
       }
 
-      return await _auth.authenticate(
-        localizedReason: 'Gunakan biometric untuk masuk ke aplikasi.',
+      final bool result = await _auth.authenticate(
+        localizedReason: 'Gunakan biometric atau kunci layar untuk masuk.',
         biometricOnly: false,
         persistAcrossBackgrounding: true,
       );
-    } catch (_) {
+
+      debugPrint('BIO authenticate result: $result');
+      return result;
+    } on PlatformException catch (e) {
+      debugPrint('BIO authenticate PlatformException: ${e.code} - ${e.message}');
+      return false;
+    } catch (e) {
+      debugPrint('BIO authenticate error: $e');
       return false;
     }
   }

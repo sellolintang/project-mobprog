@@ -704,6 +704,21 @@ class _JuryDashboardScreenState extends State<JuryDashboardScreen> {
         title: const Text('Dashboard Juri'),
         actions: [
           IconButton(
+            tooltip: 'Kunci Aplikasi',
+            onPressed: () async {
+              await context.read<AuthProvider>().lockApp();
+
+              if (!context.mounted) return;
+
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                AppRoutes.login,
+                    (route) => false,
+              );
+            },
+            icon: const Icon(Icons.lock_outline),
+          ),
+          IconButton(
             tooltip: 'Refresh',
             onPressed: _isLoading ? null : _refreshDashboard,
             icon: const Icon(Icons.refresh),

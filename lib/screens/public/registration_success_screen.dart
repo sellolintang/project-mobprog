@@ -51,7 +51,7 @@ class RegistrationSuccessScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Data calon Duta Kampus berhasil dikirim dan sedang menunggu validasi admin.',
+                      'Data calon Duta PNJ berhasil dikirim dan sedang menunggu validasi admin.',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.black54),
                     ),

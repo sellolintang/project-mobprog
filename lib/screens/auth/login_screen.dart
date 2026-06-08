@@ -163,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 16),
                             const Text(
-                              'Duta Kampus Mobile',
+                              'Duta Kampus PNJ',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 24,
@@ -234,20 +234,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             const SizedBox(height: 8),
 
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: authProvider.isLoading
-                                    ? null
-                                    : () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.forgotPassword,
-                                  );
-                                },
-                                child: const Text('Lupa Password?'),
-                              ),
-                            ),
+                            // Align(
+                            //   alignment: Alignment.centerRight,
+                            //   child: TextButton(
+                            //     onPressed: authProvider.isLoading
+                            //         ? null
+                            //         : () {
+                            //       Navigator.pushNamed(
+                            //         context,
+                            //         AppRoutes.forgotPassword,
+                            //       );
+                            //     },
+                            //     child: const Text('Lupa Password?'),
+                            //   ),
+                            // ),
 
                             const SizedBox(height: 16),
 

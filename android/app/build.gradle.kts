@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.project_mobprog"
     compileSdk = flutter.compileSdkVersion
-
+    ndkVersion = "28.2.13676358"
     defaultConfig {
         applicationId = "com.example.project_mobprog"
         minSdk = 24

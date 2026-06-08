@@ -462,7 +462,7 @@ class _CandidateRegistrationScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pendaftaran Calon'),
+        title: const Text('Pendaftaran Calon Duta PNJ'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -484,7 +484,7 @@ class _CandidateRegistrationScreenState
                       ),
                       const SizedBox(height: 16),
                       const Text(
-                        'Form Pendaftaran Calon Duta Kampus',
+                        'Form Pendaftaran Calon Duta PNJ',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 21,
@@ -525,7 +525,7 @@ class _CandidateRegistrationScreenState
 
                       _textField(
                         controller: _emailController,
-                        label: 'Email',
+                        label: 'Email Akademik',
                         icon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
                         validator: _emailValidator,
@@ -544,7 +544,7 @@ class _CandidateRegistrationScreenState
 
                       _textField(
                         controller: _facultyController,
-                        label: 'Fakultas',
+                        label: 'Jurusan',
                         icon: Icons.account_balance_outlined,
                       ),
                       const SizedBox(height: 16),

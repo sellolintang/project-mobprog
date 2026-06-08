@@ -171,6 +171,12 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> lockApp() async {
+    user = null;
+    errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> logout() async {
     try {
       await _authService.logout();

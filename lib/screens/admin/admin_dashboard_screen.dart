@@ -454,6 +454,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         automaticallyImplyLeading: false,
         title: const Text('Dashboard Admin'),
         actions: [
+          IconButton(
+            tooltip: 'Kunci Aplikasi',
+            onPressed: () async {
+              await context.read<AuthProvider>().lockApp();
+
+              if (!context.mounted) return;
+
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                AppRoutes.login,
+                    (route) => false,
+              );
+            },
+            icon: const Icon(Icons.lock_outline),
+          ),
           Stack(
             children: [
               IconButton(
@@ -601,7 +616,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             _AdminMenuCard(
               icon: Icons.emoji_events,
               title: 'Hasil ARAS',
-              subtitle: 'Lihat ranking akhir calon Duta Kampus',
+              subtitle: 'Lihat ranking akhir calon Duta PNJ',
               onTap: () => _openRouteAndRefresh(AppRoutes.arasResultList),
             ),
           ],
